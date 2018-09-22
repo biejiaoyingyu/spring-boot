@@ -138,6 +138,9 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
  * @author Artsiom Yudovin
  */
 @Configuration
+/**
+ * 注意条件注解，会自动加载
+ */
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class })
 @ConditionalOnMissingBean(WebMvcConfigurationSupport.class)

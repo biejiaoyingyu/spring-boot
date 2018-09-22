@@ -95,10 +95,8 @@ public class AutoConfigurationImportSelector
 		if (!isEnabled(annotationMetadata)) {
 			return NO_IMPORTS;
 		}
-		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
-				.loadMetadata(this.beanClassLoader);
-		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(
-				autoConfigurationMetadata, annotationMetadata);
+		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader.loadMetadata(this.beanClassLoader);
+		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata, annotationMetadata);
 		return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
 	}
 
@@ -176,10 +174,11 @@ public class AutoConfigurationImportSelector
 	 * attributes}
 	 * @return a list of candidate configurations
 	 */
-	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata,
-			AnnotationAttributes attributes) {
-		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(
-				getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+		/**
+		 * 典型用法，加载相应类的配置信息，比如说springmvc
+		 */
+		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
 		Assert.notEmpty(configurations,
 				"No auto configuration classes found in META-INF/spring.factories. If you "
 						+ "are using a custom packaging, make sure that file is correct.");

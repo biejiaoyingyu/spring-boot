@@ -167,6 +167,7 @@ public class SpringApplication {
 	/**
 	 * The class name of application context that will be used by default for web
 	 * environments.
+	 *
 	 */
 	public static final String DEFAULT_WEB_CONTEXT_CLASS = "org.springframework.boot."
 			+ "web.servlet.context.AnnotationConfigServletWebServerApplicationContext";
@@ -273,10 +274,24 @@ public class SpringApplication {
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
+		// 参数初始化
 		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+		/**
+		 * 推断当前环境是否环境类型
+		 */
 		this.webApplicationType = deduceWebApplicationType();
-		setInitializers((Collection) getSpringFactoriesInstances(
-				ApplicationContextInitializer.class));
+		/**
+		 * ApplicationContextInitializer.class创建配置文件中国相应类的对象设置
+		 * ------------------------------------------
+		 * 手法和注解版org.springframework.web.SpringServletContainerInitializer
+		 * 当前应用会扫描每个jar包下的META-INF/JAVAX.SERVLET.Servlet.servletContainerInitializer
+		 * 指定的实现类，并且运行它（这里是外置tomcat）
+		 */
+		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
+
+		/**
+		 * 在其中之一就是创建配置文件相关的ConfigFileApplicationListener
+		 */
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		this.mainApplicationClass = deduceMainApplicationClass();
 	}
@@ -288,6 +303,9 @@ public class SpringApplication {
 			return WebApplicationType.REACTIVE;
 		}
 		for (String className : WEB_ENVIRONMENT_CLASSES) {
+			/**
+			 * 是否存在指定的类，用应用类加载器在classPath中:依赖关系中加载指定的类。
+			 */
 			if (!ClassUtils.isPresent(className, null)) {
 				return WebApplicationType.NONE;
 			}
@@ -295,9 +313,16 @@ public class SpringApplication {
 		return WebApplicationType.SERVLET;
 	}
 
+
+	/**
+	 * 推断应用入口类这部分比较有意思，他是通过new了一个运行时异常来拿到main线程的堆栈信息，
+	 * 遍历所有方法找到main方法所在的类。
+	 */
 	private Class<?> deduceMainApplicationClass() {
+		// 通过new一个运行时异常获取堆栈信息
 		try {
 			StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
+			// 找到main函数所在的入口类
 			for (StackTraceElement stackTraceElement : stackTrace) {
 				if ("main".equals(stackTraceElement.getMethodName())) {
 					return Class.forName(stackTraceElement.getClassName());
@@ -317,28 +342,33 @@ public class SpringApplication {
 	 * @return a running {@link ApplicationContext}
 	 */
 	public ConfigurableApplicationContext run(String... args) {
+		//构建一个秒表
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 		ConfigurableApplicationContext context = null;
 		Collection<SpringBootExceptionReporter> exceptionReporters = new ArrayList<>();
 		configureHeadlessProperty();
+
 		SpringApplicationRunListeners listeners = getRunListeners(args);
+		/**
+		 * 启动监听器
+		 */
 		listeners.starting();
+
 		try {
-			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
-					args);
-			ConfigurableEnvironment environment = prepareEnvironment(listeners,
-					applicationArguments);
+			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+			ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
+			/**
+			 * 创建注解版的ioc容器
+			 */
 			context = createApplicationContext();
-			exceptionReporters = getSpringFactoriesInstances(
-					SpringBootExceptionReporter.class,
-					new Class[] { ConfigurableApplicationContext.class }, context);
-			prepareContext(context, environment, listeners, applicationArguments,
-					printedBanner);
+			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class, new Class[] { ConfigurableApplicationContext.class }, context);
+			prepareContext(context, environment, listeners, applicationArguments, printedBanner);
 			refreshContext(context);
 			afterRefresh(context, applicationArguments);
+			//秒表停止，打印日志
 			stopWatch.stop();
 			if (this.logStartupInfo) {
 				new StartupInfoLogger(this.mainApplicationClass)
@@ -436,8 +466,10 @@ public class SpringApplication {
 
 	private SpringApplicationRunListeners getRunListeners(String[] args) {
 		Class<?>[] types = new Class<?>[] { SpringApplication.class, String[].class };
-		return new SpringApplicationRunListeners(logger, getSpringFactoriesInstances(
-				SpringApplicationRunListener.class, types, this, args));
+		/**
+		 * 根据类名寻找配置文件
+		 */
+		return new SpringApplicationRunListeners(logger, getSpringFactoriesInstances(SpringApplicationRunListener.class, types, this, args));
 	}
 
 	private <T> Collection<T> getSpringFactoriesInstances(Class<T> type) {
@@ -448,8 +480,7 @@ public class SpringApplication {
 			Class<?>[] parameterTypes, Object... args) {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		// Use names and ensure unique to protect against duplicates
-		Set<String> names = new LinkedHashSet<>(
-				SpringFactoriesLoader.loadFactoryNames(type, classLoader));
+		Set<String> names = new LinkedHashSet<>(SpringFactoriesLoader.loadFactoryNames(type, classLoader));
 		List<T> instances = createSpringFactoriesInstances(type, parameterTypes,
 				classLoader, args, names);
 		AnnotationAwareOrderComparator.sort(instances);
@@ -616,6 +647,10 @@ public class SpringApplication {
 					contextClass = Class.forName(DEFAULT_REACTIVE_WEB_CONTEXT_CLASS);
 					break;
 				default:
+					/**
+					 * AnnotationConfigApplicationContext注解版的iod容器
+					 *
+					 */
 					contextClass = Class.forName(DEFAULT_CONTEXT_CLASS);
 				}
 			}

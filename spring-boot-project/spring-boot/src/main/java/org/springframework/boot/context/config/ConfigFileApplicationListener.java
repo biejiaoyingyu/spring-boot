@@ -98,15 +98,24 @@ import org.springframework.util.StringUtils;
  * @author Andy Wilkinson
  * @author Eddú Meléndez
  * @author Madhura Bhave
+ *
+ * ------------------------
+ * 配置文件相关的信息
  */
 public class ConfigFileApplicationListener
 		implements EnvironmentPostProcessor, SmartApplicationListener, Ordered {
 
 	private static final String DEFAULT_PROPERTIES = "defaultProperties";
 
+	/**
+	 * 默认配置文件的加载位置，如果相同，取最后一个
+	 */
 	// Note the order is from least to most specific (last one wins)
 	private static final String DEFAULT_SEARCH_LOCATIONS = "classpath:/,classpath:/config/,file:./,file:./config/";
 
+	/**
+	 * 默认配置文件的名称
+	 */
 	private static final String DEFAULT_NAMES = "application";
 
 	private static final Set<String> NO_SEARCH_NAMES = Collections.singleton(null);
