@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Brian Clozel
  * @since 2.1.0
  */
-@ConfigurationProperties(prefix = "spring.http")
+@ConfigurationProperties(prefix = "spring.http")//从配置文件中获取指定的值
 public class HttpProperties {
 
 	/**

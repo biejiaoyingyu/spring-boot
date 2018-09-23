@@ -71,6 +71,12 @@ import org.springframework.core.io.support.SpringFactoriesLoader;
  * @see ConditionalOnClass
  * @see AutoConfigureAfter
  * @see SpringBootApplication
+ *
+ * =====================》》》》》》
+ * 开启自动配置
+ * 利用@Import(AutoConfigurationImportSelector.class)导入组件
+ *
+ *
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

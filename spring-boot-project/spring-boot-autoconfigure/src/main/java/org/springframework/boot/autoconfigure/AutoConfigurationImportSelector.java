@@ -69,7 +69,7 @@ import org.springframework.util.StringUtils;
  * @since 1.3.0
  * @see EnableAutoConfiguration
  */
-public class AutoConfigurationImportSelector
+public class  AutoConfigurationImportSelector
 		implements DeferredImportSelector, BeanClassLoaderAware, ResourceLoaderAware,
 		BeanFactoryAware, EnvironmentAware, Ordered {
 
@@ -95,6 +95,12 @@ public class AutoConfigurationImportSelector
 		if (!isEnabled(annotationMetadata)) {
 			return NO_IMPORTS;
 		}
+
+		/**
+		 * 自动配置加载元数据EnableAutoConfiguration.class,导入很多自动配置类
+		 * 以HttpEncodingAutoConfiguration为例
+		 * 所有在配置文件中能配置的属性都在xxxxxProperties类中封装着，配置文件能配置什么就能参照相应的属性类【详情见此类】
+		 */
 		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader.loadMetadata(this.beanClassLoader);
 		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata, annotationMetadata);
 		return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
@@ -114,8 +120,10 @@ public class AutoConfigurationImportSelector
 			return EMPTY_ENTRY;
 		}
 		AnnotationAttributes attributes = getAttributes(annotationMetadata);
-		List<String> configurations = getCandidateConfigurations(annotationMetadata,
-				attributes);
+		/**
+		 * 获取候选的配置
+		 */
+		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
 		configurations = removeDuplicates(configurations);
 		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
 		checkExcludedClasses(configurations, exclusions);
@@ -174,7 +182,7 @@ public class AutoConfigurationImportSelector
 	 * attributes}
 	 * @return a list of candidate configurations
 	 */
-	protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+	protected List<String>   getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
 		/**
 		 * 典型用法，加载相应类的配置信息，比如说springmvc
 		 */

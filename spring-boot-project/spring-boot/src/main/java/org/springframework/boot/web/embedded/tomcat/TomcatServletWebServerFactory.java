@@ -155,11 +155,16 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		super(contextPath, port);
 	}
 
+	/**
+	 * 嵌入式tomcat容器的默认设置和启动
+	 * @param initializers {@link ServletContextInitializer}s that should be applied as
+	 * the server starts
+	 * @return
+	 */
 	@Override
 	public WebServer getWebServer(ServletContextInitializer... initializers) {
 		Tomcat tomcat = new Tomcat();
-		File baseDir = (this.baseDirectory != null) ? this.baseDirectory
-				: createTempDir("tomcat");
+		File baseDir = (this.baseDirectory != null) ? this.baseDirectory : createTempDir("tomcat");
 		tomcat.setBaseDir(baseDir.getAbsolutePath());
 		Connector connector = new Connector(this.protocol);
 		tomcat.getService().addConnector(connector);

@@ -282,10 +282,15 @@ public class SpringApplication {
 		this.webApplicationType = deduceWebApplicationType();
 		/**
 		 * ApplicationContextInitializer.class创建配置文件中国相应类的对象设置
+		 * 这个方法会尝试从类路径的META-INF/spring.factories处读取相应配置文件，
+		 * 然后进行遍历，读取配置文件中Key为：org.springframework.context.ApplicationContextInitializer的value
 		 * ------------------------------------------
 		 * 手法和注解版org.springframework.web.SpringServletContainerInitializer
 		 * 当前应用会扫描每个jar包下的META-INF/JAVAX.SERVLET.Servlet.servletContainerInitializer
 		 * 指定的实现类，并且运行它（这里是外置tomcat）
+		 *
+		 * ------------------
+		 * AbstractConfigurableWebServerFactory
 		 */
 		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
 
@@ -361,7 +366,9 @@ public class SpringApplication {
 			configureIgnoreBeanInfo(environment);
 			Banner printedBanner = printBanner(environment);
 			/**
-			 * 创建注解版的ioc容器
+			 * 创建的ioc容器
+			 * 如果是Servlet就是AnnotationConfigServletWebServerApplicationContext
+			 * 这个类重写了onRefresh()方法在容器刷新的时候会启动内置tomcat
 			 */
 			context = createApplicationContext();
 			exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class, new Class[] { ConfigurableApplicationContext.class }, context);
@@ -641,16 +648,16 @@ public class SpringApplication {
 			try {
 				switch (this.webApplicationType) {
 				case SERVLET:
+					/**
+					 * 默认
+					 */
+
 					contextClass = Class.forName(DEFAULT_WEB_CONTEXT_CLASS);
 					break;
 				case REACTIVE:
 					contextClass = Class.forName(DEFAULT_REACTIVE_WEB_CONTEXT_CLASS);
 					break;
 				default:
-					/**
-					 * AnnotationConfigApplicationContext注解版的iod容器
-					 *
-					 */
 					contextClass = Class.forName(DEFAULT_CONTEXT_CLASS);
 				}
 			}
@@ -829,6 +836,7 @@ public class SpringApplication {
 	 */
 	protected void refresh(ApplicationContext applicationContext) {
 		Assert.isInstanceOf(AbstractApplicationContext.class, applicationContext);
+		//向下转型
 		((AbstractApplicationContext) applicationContext).refresh();
 	}
 

@@ -116,7 +116,6 @@ public class DispatcherServletAutoConfiguration {
 			// Detect if the user has created a MultipartResolver but named it incorrectly
 			return resolver;
 		}
-
 	}
 
 	@Configuration

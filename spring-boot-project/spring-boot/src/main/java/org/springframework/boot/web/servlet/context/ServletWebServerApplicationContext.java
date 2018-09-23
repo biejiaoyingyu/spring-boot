@@ -145,10 +145,41 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		}
 	}
 
+
+	/**
+	 * 重写父类的onRefresh()方法
+	 */
 	@Override
 	protected void onRefresh() {
 		super.onRefresh();
 		try {
+			/**
+			 * 创建web服务器
+			 * 在后面沿着代码进去，会调用了service.addConnector,此处用的是标准的
+			 * service即是StandardService。在这个方法中调用了connector.start();
+			 * 方法，这个方法调用了父类LifecycleBase类的start()方法，关于LifecycleBase
+			 * 类是tomcat组件管理中非常重要的一个类型，负责组件的启动，停止等操作。
+			 * 然后在方法：startInternal();中调用回了Connector的startInternal()方法:
+			 *
+			 * ----------------------------------
+			 *	在这个方法中，最关键的一行代码就是protocolHandler.start();，这个方
+			 *	法中protocolHandler类型是：Http11NioProtocol，其类型定义在Connector的如下代码中：
+			 *  protected String protocolHandlerClassName = "org.apache.coyote.http11.Http11NioProtocol";
+			 *
+			 *  ----------------------------
+			 *  在此，普及一下tomcat类中的知识，在Connector中有一属性非常重要，就是protocol，
+			 *  这个属性决定了Connector用哪种方式与客户端连接，springboot1.5中默认使用的
+			 *  是Http11NioProtocol，而在protocol中也有一个非常重要的属性是endpoint,关于
+			 *  endpoint是接收非配socket的连接点了，至关重要。
+			 *  在endpoint的start方法中做了端口接听，以及读写数据等等与客户端的交互工作。至此，
+			 *  在springboot的内置tomcat的入口就找到了。最后再介绍一个tomcat相关的几个重要组件：
+			 *  Server，默认是使用StandardServer，这个类是Lifecycle的子类，是tomcat启动的第一个组件。
+			 *  Service，在Server属性中，tomcat紧接着Server启动的服务组件。Engine，默认使用StandardEngine，
+			 *  一个engine表示为特定的服务请求处理流水线。由于服务可能有多个连接器，引擎会接收并处理来自这些
+			 *  连接器的所有请求，并将响应传递回适当的连接器以传输给客户端。该engine interface可以实现提供
+			 *  自定义的发动机，虽然这种情况并不常见。Host，默认实现StandardHost，负责处理地址或者域名。
+			 *
+			 */
 			createWebServer();
 		}
 		catch (Throwable ex) {
@@ -171,10 +202,14 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		stopAndReleaseWebServer();
 	}
 
+	/**
+	 * 创建web服务器
+	 */
 	private void createWebServer() {
 		WebServer webServer = this.webServer;
 		ServletContext servletContext = getServletContext();
 		if (webServer == null && servletContext == null) {
+			//获取Servlet容器的工厂
 			ServletWebServerFactory factory = getWebServerFactory();
 			this.webServer = factory.getWebServer(getSelfInitializer());
 		}
@@ -198,8 +233,10 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 	 */
 	protected ServletWebServerFactory getWebServerFactory() {
 		// Use bean names so that we don't consider the hierarchy
-		String[] beanNames = getBeanFactory()
-				.getBeanNamesForType(ServletWebServerFactory.class);
+		/**
+		 * 用容器工厂获取嵌入式的容器
+		 */
+		String[] beanNames = getBeanFactory().getBeanNamesForType(ServletWebServerFactory.class);
 		if (beanNames.length == 0) {
 			throw new ApplicationContextException(
 					"Unable to start ServletWebServerApplicationContext due to missing "
@@ -224,16 +261,17 @@ public class ServletWebServerApplicationContext extends GenericWebApplicationCon
 		return this::selfInitialize;
 	}
 
+
+	/**
+	 * 在selfInitialize方法中获取到所有ServletContextInitializer对象，并调用其onStartup方法
+	 */
 	private void selfInitialize(ServletContext servletContext) throws ServletException {
 		prepareWebApplicationContext(servletContext);
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
-		ExistingWebApplicationScopes existingScopes = new ExistingWebApplicationScopes(
-				beanFactory);
-		WebApplicationContextUtils.registerWebApplicationScopes(beanFactory,
-				getServletContext());
+		ExistingWebApplicationScopes existingScopes = new ExistingWebApplicationScopes(beanFactory);
+		WebApplicationContextUtils.registerWebApplicationScopes(beanFactory, getServletContext());
 		existingScopes.restore();
-		WebApplicationContextUtils.registerEnvironmentBeans(beanFactory,
-				getServletContext());
+		WebApplicationContextUtils.registerEnvironmentBeans(beanFactory, getServletContext());
 		for (ServletContextInitializer beans : getServletContextInitializerBeans()) {
 			beans.onStartup(servletContext);
 		}

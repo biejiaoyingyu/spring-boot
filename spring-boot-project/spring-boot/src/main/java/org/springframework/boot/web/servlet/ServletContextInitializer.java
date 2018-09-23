@@ -41,6 +41,7 @@ import org.springframework.web.WebApplicationInitializer;
 @FunctionalInterface
 public interface ServletContextInitializer {
 
+
 	/**
 	 * Configure the given {@link ServletContext} with any servlets, filters, listeners
 	 * context-params and attributes necessary for initialization.

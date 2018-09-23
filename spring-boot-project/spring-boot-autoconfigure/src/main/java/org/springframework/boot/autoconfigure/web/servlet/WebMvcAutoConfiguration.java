@@ -145,8 +145,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 @ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class })
 @ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
-@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class,
-		TaskExecutionAutoConfiguration.class, ValidationAutoConfiguration.class })
+@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class, ValidationAutoConfiguration.class })
 public class WebMvcAutoConfiguration {
 
 	public static final String DEFAULT_PREFIX = "";
@@ -271,6 +270,11 @@ public class WebMvcAutoConfiguration {
 			return resolver;
 		}
 
+		/**
+		 * 自己可以给容器中添加一个试图解析器（实现viewResolver方法），然后ContentNegotiatingViewResolver会自动组合进来
+		 * @param beanFactory
+		 * @return
+		 */
 		@Bean
 		@ConditionalOnBean(ViewResolver.class)
 		@ConditionalOnMissingBean(name = "viewResolver", value = ContentNegotiatingViewResolver.class)
