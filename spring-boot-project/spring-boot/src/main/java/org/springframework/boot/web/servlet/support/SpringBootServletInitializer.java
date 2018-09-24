@@ -100,6 +100,8 @@ public abstract class SpringBootServletInitializer implements WebApplicationInit
 				@Override
 				public void contextInitialized(ServletContextEvent event) {
 					// no-op because the application context is already initialized
+					// 什么也不做，因为application context 已经被实例化了，不然就会用这个监听器来实例化springioc容器
+					//参见spring-5注解版
 				}
 			});
 		}
