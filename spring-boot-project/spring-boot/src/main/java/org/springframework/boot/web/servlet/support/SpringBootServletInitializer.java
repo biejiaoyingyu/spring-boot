@@ -116,6 +116,7 @@ public abstract class SpringBootServletInitializer implements WebApplicationInit
 			ServletContext servletContext) {
 		// 1、创建SpringApplicationBuilder
 		SpringApplicationBuilder builder = createSpringApplicationBuilder();
+		// 3. 设置启动类为当前类
 		builder.main(getClass());
 		//准备环境
 		ApplicationContext parent = getExistingRootWebApplicationContext(servletContext);
@@ -127,10 +128,11 @@ public abstract class SpringBootServletInitializer implements WebApplicationInit
 		//初始化
 		builder.initializers(new ServletContextApplicationContextInitializer(servletContext));
 		builder.contextClass(AnnotationConfigServletWebServerApplicationContext.class);
-		// 4、调用configure方法，子类重写了这个方法，将SpringBoot的主程序类传入了进来
+		// 4、调用configure方法，子类重写了这个方法，将SpringBoot的主程序类传入了进来,个性化配置
 		builder = configure(builder);
 		builder.listeners(new WebEnvironmentPropertySourceInitializer(servletContext));
 		SpringApplication application = builder.build();
+		//如果sources 为空,并且启动类有@Configuration 注解,则添加当前类到sources中
 		if (application.getAllSources().isEmpty() && AnnotationUtils.findAnnotation(getClass(), Configuration.class) != null) {
 			application.addPrimarySources(Collections.singleton(getClass()));
 		}
