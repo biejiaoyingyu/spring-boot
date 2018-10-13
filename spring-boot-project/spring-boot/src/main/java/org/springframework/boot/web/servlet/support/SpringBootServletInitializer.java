@@ -16,17 +16,8 @@
 
 package org.springframework.boot.web.servlet.support;
 
-import java.util.Collections;
-
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletException;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.ParentContextApplicationContextInitializer;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -44,6 +35,9 @@ import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ConfigurableWebEnvironment;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.WebApplicationContext;
+
+import javax.servlet.*;
+import java.util.Collections;
 
 /**
  * An opinionated {@link WebApplicationInitializer} to run a {@link SpringApplication}
@@ -67,6 +61,24 @@ import org.springframework.web.context.WebApplicationContext;
  * @author Andy Wilkinson
  * @since 2.0.0
  * @see #configure(SpringApplicationBuilder)
+ *
+ * tomcat启动的时候
+ * 当前应用会扫描每个jar包下的META-INF/JAVAX.SERVLET.Servlet.servletContainerInitializer指定的实现类，并且运行它
+ * 然后在servletContainerInitializer头上就有一个注解@HandlesTypes(WebApplicationInitializer.class)
+ * 我们需要手动去实现 SpringBootServletInitializer传入相关类
+ *
+ * 	@SpringBootApplication
+	public class Application extends SpringBootServletInitializer {
+		@Override
+		protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+			return application.sources(Application.class);
+		}
+		public static void main(String[] args) throws Exception {
+			SpringApplication.run(Application.class, args);
+		}
+	}
+
+ 	启动的时候会调用当前类的onStartup()方法
  */
 public abstract class SpringBootServletInitializer implements WebApplicationInitializer {
 
@@ -101,7 +113,7 @@ public abstract class SpringBootServletInitializer implements WebApplicationInit
 				public void contextInitialized(ServletContextEvent event) {
 					// no-op because the application context is already initialized
 					// 什么也不做，因为application context 已经被实例化了，不然就会用这个监听器来实例化springioc容器
-					//参见spring-5注解版
+					// 参见spring-5注解版（这里对于注解版来说很重要）
 				}
 			});
 		}
