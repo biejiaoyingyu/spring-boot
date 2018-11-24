@@ -16,9 +16,6 @@
 
 package org.springframework.boot.context.config;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.context.ApplicationContextException;
 import org.springframework.context.ApplicationContextInitializer;
@@ -31,12 +28,21 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * {@link ApplicationContextInitializer} that delegates to other initializers that are
  * specified under a {@literal context.initializer.classes} environment property.
  *
  * @author Dave Syer
  * @author Phillip Webb
+ *
+ *
+ * 顾名思义，这个初始化器实际上将初始化的工作委托给context.initializer.classes环境变量指定的初始化器(通过类名)，
+ * 这个解释牛逼
+ * 这个初始化器的优先级是Spring Boot定义的4个初始化器中优先级别最高的，因此会被第一个执行
+ *
  */
 public class DelegatingApplicationContextInitializer implements
 		ApplicationContextInitializer<ConfigurableApplicationContext>, Ordered {
@@ -47,19 +53,30 @@ public class DelegatingApplicationContextInitializer implements
 
 	private int order = 0;
 
+	/**
+	 * 这里用到了委托模式
+	 * @param context
+	 */
 	@Override
 	public void initialize(ConfigurableApplicationContext context) {
 		ConfigurableEnvironment environment = context.getEnvironment();
+
 		List<Class<?>> initializerClasses = getInitializerClasses(environment);
 		if (!initializerClasses.isEmpty()) {
+			//开始调用具体ApplicationContextInitializer类中的initialize方法。
 			applyInitializerClasses(context, initializerClasses);
 		}
 	}
 
 	private List<Class<?>> getInitializerClasses(ConfigurableEnvironment env) {
+		//PROPERTY_NAME = "context.initializer.classes";
+		//通过env获取到context.initializer.classes配置的值，如果有则直接获取到具体的值并进行实例化。
 		String classNames = env.getProperty(PROPERTY_NAME);
 		List<Class<?>> classes = new ArrayList<>();
 		if (StringUtils.hasLength(classNames)) {
+			/**
+			 * 多个配置用逗号隔开
+			 */
 			for (String className : StringUtils.tokenizeToStringArray(classNames, ",")) {
 				classes.add(getInitializerClass(className));
 			}
@@ -67,10 +84,15 @@ public class DelegatingApplicationContextInitializer implements
 		return classes;
 	}
 
+	/**
+	 *
+	 * @param className
+	 * @return
+	 * @throws LinkageError
+	 */
 	private Class<?> getInitializerClass(String className) throws LinkageError {
 		try {
-			Class<?> initializerClass = ClassUtils.forName(className,
-					ClassUtils.getDefaultClassLoader());
+			Class<?> initializerClass = ClassUtils.forName(className, ClassUtils.getDefaultClassLoader());
 			Assert.isAssignable(ApplicationContextInitializer.class, initializerClass);
 			return initializerClass;
 		}

@@ -16,40 +16,27 @@
 
 package org.springframework.boot.autoconfigure.web.servlet;
 
-import java.util.Arrays;
-import java.util.List;
-
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletRegistration;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureOrder;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionMessage;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.boot.autoconfigure.condition.ConditionMessage.Style;
-import org.springframework.boot.autoconfigure.condition.ConditionOutcome;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type;
-import org.springframework.boot.autoconfigure.condition.SpringBootCondition;
 import org.springframework.boot.autoconfigure.http.HttpProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.*;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.servlet.DispatcherServlet;
+
+import javax.servlet.MultipartConfigElement;
+import javax.servlet.ServletRegistration;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for the Spring
@@ -62,6 +49,17 @@ import org.springframework.web.servlet.DispatcherServlet;
  * @author Stephane Nicoll
  * @author Brian Clozel
  */
+
+      /*
+        @ConditionalOnBean（仅仅在当前上下文中存在某个对象时，才会实例化一个Bean）
+		@ConditionalOnClass（某个class位于类路径上，才会实例化一个Bean）
+		@ConditionalOnExpression（当表达式为true的时候，才会实例化一个Bean）
+		@ConditionalOnMissingBean（仅仅在当前上下文中不存在某个对象时，才会实例化一个Bean）
+		@ConditionalOnMissingClass（某个class类路径上不存在的时候，才会实例化一个Bean）
+		@ConditionalOnNotWebApplication（不是web应用）
+		@ConditionalOnClass：该注解的参数对应的类必须存在，否则不解析该注解修饰的配置类；
+		@ConditionalOnMissingBean：该注解表示，如果存在它修饰的类的bean，则不需要再创建这个bean；可以给该注解传入参数例如@ConditionOnMissingBean(name = "example")，这个表示如果name为“example”的bean存在，这该注解修饰的代码块不执行。
+	   */
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
 @ConditionalOnWebApplication(type = Type.SERVLET)
@@ -94,18 +92,14 @@ public class DispatcherServletAutoConfiguration {
 			this.httpProperties = httpProperties;
 			this.webMvcProperties = webMvcProperties;
 		}
-
+		//在这里引入springmvc的ioc容器
 		@Bean(name = DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
 		public DispatcherServlet dispatcherServlet() {
 			DispatcherServlet dispatcherServlet = new DispatcherServlet();
-			dispatcherServlet.setDispatchOptionsRequest(
-					this.webMvcProperties.isDispatchOptionsRequest());
-			dispatcherServlet.setDispatchTraceRequest(
-					this.webMvcProperties.isDispatchTraceRequest());
-			dispatcherServlet.setThrowExceptionIfNoHandlerFound(
-					this.webMvcProperties.isThrowExceptionIfNoHandlerFound());
-			dispatcherServlet.setEnableLoggingRequestDetails(
-					this.httpProperties.isLogRequestDetails());
+			dispatcherServlet.setDispatchOptionsRequest(this.webMvcProperties.isDispatchOptionsRequest());
+			dispatcherServlet.setDispatchTraceRequest(this.webMvcProperties.isDispatchTraceRequest());
+			dispatcherServlet.setThrowExceptionIfNoHandlerFound(this.webMvcProperties.isThrowExceptionIfNoHandlerFound());
+			dispatcherServlet.setEnableLoggingRequestDetails(this.httpProperties.isLogRequestDetails());
 			return dispatcherServlet;
 		}
 
@@ -186,8 +180,7 @@ public class DispatcherServletAutoConfiguration {
 	}
 
 	@Order(Ordered.LOWEST_PRECEDENCE - 10)
-	private static class DispatcherServletRegistrationCondition
-			extends SpringBootCondition {
+	private static class DispatcherServletRegistrationCondition extends SpringBootCondition {
 
 		@Override
 		public ConditionOutcome getMatchOutcome(ConditionContext context,

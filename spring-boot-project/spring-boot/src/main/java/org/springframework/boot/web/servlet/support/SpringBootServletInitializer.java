@@ -124,8 +124,7 @@ public abstract class SpringBootServletInitializer implements WebApplicationInit
 		}
 	}
 
-	protected WebApplicationContext createRootApplicationContext(
-			ServletContext servletContext) {
+	protected WebApplicationContext createRootApplicationContext(ServletContext servletContext) {
 		// 1、创建SpringApplicationBuilder
 		SpringApplicationBuilder builder = createSpringApplicationBuilder();
 		// 3. 设置启动类为当前类

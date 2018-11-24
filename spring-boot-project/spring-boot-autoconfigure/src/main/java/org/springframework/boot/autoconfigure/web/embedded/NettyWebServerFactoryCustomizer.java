@@ -33,8 +33,7 @@ import org.springframework.util.unit.DataSize;
  * @author Chentao Qu
  * @since 2.1.0
  */
-public class NettyWebServerFactoryCustomizer
-		implements WebServerFactoryCustomizer<NettyReactiveWebServerFactory>, Ordered {
+public class NettyWebServerFactoryCustomizer implements WebServerFactoryCustomizer<NettyReactiveWebServerFactory>, Ordered {
 
 	private final Environment environment;
 

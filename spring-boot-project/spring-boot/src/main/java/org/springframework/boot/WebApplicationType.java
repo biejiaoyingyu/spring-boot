@@ -41,6 +41,10 @@ public enum WebApplicationType {
 	 * The application should run as a reactive web application and should start an
 	 * embedded reactive web server.
 	 */
+	/**
+	 * 反应性的，不是servlet的服务器么？？
+	 *
+	 */
 	REACTIVE
 
 }

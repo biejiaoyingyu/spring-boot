@@ -41,12 +41,11 @@ import org.springframework.web.filter.CharacterEncodingFilter;
  * @since 1.2.0
  */
 @Configuration//表示这是一个配置类，可以给容器添加组件
-@EnableConfigurationProperties(HttpProperties.class)//启动指定类的ConfigurationProperties功能
-@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)//条件注解：判断当前应用是否web应用
-//如果是当前配置类生效
+@EnableConfigurationProperties(HttpProperties.class)//启动指定类的ConfigurationProperties功能，可以手动操作这个么？人为操作
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)//条件注解：判断当前应用是否web应用，如果是当前配置类生效
 @ConditionalOnClass(CharacterEncodingFilter.class)//判断当前项目有没有这个类，springmvc乱码拦截器
 @ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)//判断配置文件是
-//否存在某个配置spring.http.encoding，如果存在name配置文件生效，matchIfMissing为true就是表明如果不存在也生效
+//否存在某个配置spring.http.encoding，如果存在那么配置文件生效，matchIfMissing为true就是表明如果不存在也生效
 //一旦生效了：就会给容器中添加一些组件
 public class HttpEncodingAutoConfiguration {
 

@@ -137,14 +137,16 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
  * @author Bruce Brouwer
  * @author Artsiom Yudovin
  */
-@Configuration
+
 /**
  * 注意条件注解，会自动加载
  */
+@Configuration
 @ConditionalOnWebApplication(type = Type.SERVLET)
 @ConditionalOnClass({ Servlet.class, DispatcherServlet.class, WebMvcConfigurer.class })
 @ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
+//代表的含义就是自动注入在什么类加载前或者之后
 @AutoConfigureAfter({ DispatcherServletAutoConfiguration.class, TaskExecutionAutoConfiguration.class, ValidationAutoConfiguration.class })
 public class WebMvcAutoConfiguration {
 
@@ -174,8 +176,7 @@ public class WebMvcAutoConfiguration {
 	@Import(EnableWebMvcConfiguration.class)
 	@EnableConfigurationProperties({ WebMvcProperties.class, ResourceProperties.class })
 	@Order(0)
-	public static class WebMvcAutoConfigurationAdapter
-			implements WebMvcConfigurer, ResourceLoaderAware {
+	public static class WebMvcAutoConfigurationAdapter implements WebMvcConfigurer, ResourceLoaderAware {
 
 		private static final Log logger = LogFactory.getLog(WebMvcConfigurer.class);
 

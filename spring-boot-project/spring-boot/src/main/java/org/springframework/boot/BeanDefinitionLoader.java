@@ -16,12 +16,7 @@
 
 package org.springframework.boot;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
 import groovy.lang.Closure;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.BeanDefinitionStoreException;
 import org.springframework.beans.factory.groovy.GroovyBeanDefinitionReader;
@@ -44,6 +39,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Loads bean definitions from underlying sources, including XML and JavaConfig. Acts as a
@@ -121,6 +120,10 @@ class BeanDefinitionLoader {
 	 * Load the sources into the reader.
 	 * @return the number of loaded beans
 	 */
+	/**
+	 * 直接跟进
+	 * @return
+	 */
 	public int load() {
 		int count = 0;
 		for (Object source : this.sources) {
@@ -131,30 +134,48 @@ class BeanDefinitionLoader {
 
 	private int load(Object source) {
 		Assert.notNull(source, "Source must not be null");
+		//如果是class类型，启用注解类型
 		if (source instanceof Class<?>) {
 			return load((Class<?>) source);
 		}
+		//如果是resource类型，启用xml解析
 		if (source instanceof Resource) {
 			return load((Resource) source);
 		}
+		//如果是package类型，启用扫描包，例如：@ComponentScan
 		if (source instanceof Package) {
 			return load((Package) source);
 		}
+		//如果是字符串类型，直接加载
 		if (source instanceof CharSequence) {
 			return load((CharSequence) source);
 		}
 		throw new IllegalArgumentException("Invalid source type " + source.getClass());
 	}
 
+	/**
+	 * 需要注意的是，springBoot2会优先选择groovy加载方式，找不到再选用java方式。或许groovy动态加载class文件的性能更胜一筹。
+	 * @param source
+	 * @return
+	 */
 	private int load(Class<?> source) {
-		if (isGroovyPresent()
-				&& GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
+		if (isGroovyPresent() && GroovyBeanDefinitionSource.class.isAssignableFrom(source)) {
 			// Any GroovyLoaders added in beans{} DSL can contribute beans here
-			GroovyBeanDefinitionSource loader = BeanUtils.instantiateClass(source,
-					GroovyBeanDefinitionSource.class);
+			GroovyBeanDefinitionSource loader = BeanUtils.instantiateClass(source, GroovyBeanDefinitionSource.class);
 			load(loader);
 		}
+		/**
+		 * 下述方法判断启动类中是否包含@component注解，可我们的启动类并没有该注解。继续跟进会发现，
+		 * AnnotationUtils判断是否包含该注解是通过递归实现，注解上的注解若包含指定类型也是可以的。
+		 * 启动类中包含@SpringBootApplication注解，进一步查找到@SpringBootConfiguration注解，
+		 * 然后查找到@Component注解，最后会查找到@Component注解：
+		 */
 		if (isComponent(source)) {
+			//上面代码中启动类被加载到 beanDefinitionMap中，
+			// 后续该启动类将作为开启自动化配置的入口，后面一篇文章我会详细的分析，
+			// 启动类是如何加载，以及自动化配置开启的详细流程。
+			//表面该对象为spring bean，然后会将其信息包装成 beanDefinitaion ，添加到容器的 beanDefinitionMap中
+			//如此一来，我们的启动类就被包装成AnnotatedGenericBeanDefinition了，后续启动类的处理都基于该对象了。
 			this.annotatedReader.register(source);
 			return 1;
 		}

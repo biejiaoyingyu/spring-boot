@@ -45,6 +45,7 @@ public interface SpringApplicationRunListener {
 	 * {@link ApplicationContext} has been created.
 	 * @param environment the environment
 	 */
+
 	void environmentPrepared(ConfigurableEnvironment environment);
 
 	/**

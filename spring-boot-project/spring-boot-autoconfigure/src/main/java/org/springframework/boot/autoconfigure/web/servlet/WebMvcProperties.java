@@ -16,15 +16,15 @@
 
 package org.springframework.boot.autoconfigure.web.servlet;
 
-import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.Locale;
-import java.util.Map;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.MediaType;
 import org.springframework.util.Assert;
 import org.springframework.validation.DefaultMessageCodesResolver;
+
+import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * {@link ConfigurationProperties properties} for Spring MVC.
@@ -111,7 +111,6 @@ public class WebMvcProperties {
 			DefaultMessageCodesResolver.Format messageCodesResolverFormat) {
 		this.messageCodesResolverFormat = messageCodesResolverFormat;
 	}
-
 	public Locale getLocale() {
 		return this.locale;
 	}

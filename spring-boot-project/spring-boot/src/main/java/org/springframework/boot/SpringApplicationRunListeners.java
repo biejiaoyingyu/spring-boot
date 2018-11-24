@@ -16,15 +16,14 @@
 
 package org.springframework.boot;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.apache.commons.logging.Log;
-
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ReflectionUtils;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * A collection of {@link SpringApplicationRunListener}.
@@ -43,12 +42,27 @@ class SpringApplicationRunListeners {
 		this.listeners = new ArrayList<>(listeners);
 	}
 
+
 	public void starting() {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.starting();
 		}
 	}
 
+
+	/**
+	 * 可以看到获取到的监听器和第一次发布启动事件获取的监听器有几个是重复的，这也验证了监听器是可以多次获取，
+	 * 根据事件类型来区分具体处理逻辑
+	 * org.springframework.boot.autoconfigure.BackgroundPreinitializer
+	 * org.springframework.boot.builder.ParentContextCloserApplicationListener,\
+	 * org.springframework.boot.context.FileEncodingApplicationListener,\
+	 * org.springframework.boot.context.config.AnsiOutputApplicationListener,\
+	 * org.springframework.boot.context.config.ConfigFileApplicationListener,\******重点
+	 * org.springframework.boot.context.logging.ClasspathLoggingApplicationListener,\
+	 * org.springframework.boot.context.logging.LoggingApplicationListener,\
+	 *
+	 * @param environment
+	 */
 	public void environmentPrepared(ConfigurableEnvironment environment) {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.environmentPrepared(environment);

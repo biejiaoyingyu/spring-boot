@@ -50,11 +50,22 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 
 	private final SimpleApplicationEventMulticaster initialMulticaster;
 
+	/**
+	 * 反射创建对象会触发构造方法
+	 * @param application
+	 * @param args
+	 */
 	public EventPublishingRunListener(SpringApplication application, String[] args) {
 		this.application = application;
 		this.args = args;
 		this.initialMulticaster = new SimpleApplicationEventMulticaster();
 		for (ApplicationListener<?> listener : application.getListeners()) {
+			/**
+			 * 进入：
+			 * 关键代码为this.defaultRetriever.applicationListeners.add(listener);，
+			 * 这是一个内部类，用来保存所有的监听器。也就是在这一步，将spring.factories中的监
+			 * 听器传递到SimpleApplicationEventMulticaster中。
+			 */
 			this.initialMulticaster.addApplicationListener(listener);
 		}
 	}
@@ -64,14 +75,21 @@ public class EventPublishingRunListener implements SpringApplicationRunListener,
 		return 0;
 	}
 
+	/**
+	 * 多波器，启动的时候发布事件，广播，默认加载的监听器会执行相应的程序
+	 */
 	@Override
 	public void starting() {
-		this.initialMulticaster.multicastEvent(
-				new ApplicationStartingEvent(this.application, this.args));
+		this.initialMulticaster.multicastEvent(new ApplicationStartingEvent(this.application, this.args));
 	}
 
+	/**
+	 *
+	 * @param environment the environment
+	 */
 	@Override
 	public void environmentPrepared(ConfigurableEnvironment environment) {
+
 		this.initialMulticaster.multicastEvent(new ApplicationEnvironmentPreparedEvent(
 				this.application, this.args, environment));
 	}

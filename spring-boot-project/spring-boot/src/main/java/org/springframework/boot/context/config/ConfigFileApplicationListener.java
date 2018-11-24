@@ -16,24 +16,7 @@
 
 package org.springframework.boot.context.config;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-
 import org.apache.commons.logging.Log;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -54,20 +37,17 @@ import org.springframework.context.annotation.ConfigurationClassPostProcessor;
 import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.MutablePropertySources;
-import org.springframework.core.env.Profiles;
-import org.springframework.core.env.PropertySource;
+import org.springframework.core.env.*;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.SpringFactoriesLoader;
-import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.ResourceUtils;
-import org.springframework.util.StringUtils;
+import org.springframework.util.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * {@link EnvironmentPostProcessor} that configures the context environment by loading
@@ -100,10 +80,11 @@ import org.springframework.util.StringUtils;
  * @author Madhura Bhave
  *
  * ------------------------
- * 配置文件相关的信息
+ * //===================================
+ * 配置文件相关的信息这个很重要，划横线。要考的、
+ * //===================================
  */
-public class ConfigFileApplicationListener
-		implements EnvironmentPostProcessor, SmartApplicationListener, Ordered {
+public class ConfigFileApplicationListener  implements EnvironmentPostProcessor, SmartApplicationListener, Ordered {
 
 	private static final String DEFAULT_PROPERTIES = "defaultProperties";
 
@@ -111,6 +92,7 @@ public class ConfigFileApplicationListener
 	 * 默认配置文件的加载位置，如果相同，取最后一个
 	 */
 	// Note the order is from least to most specific (last one wins)
+	//这个配置非常重要，解释了配置文件的路径和覆盖顺序
 	private static final String DEFAULT_SEARCH_LOCATIONS = "classpath:/,classpath:/config/,file:./,file:./config/";
 
 	/**
@@ -177,20 +159,32 @@ public class ConfigFileApplicationListener
 		}
 	}
 
-	private void onApplicationEnvironmentPreparedEvent(
-			ApplicationEnvironmentPreparedEvent event) {
+	/**
+	 * 发布系统环境准备好的事件
+	 * @param event
+	 */
+	private void onApplicationEnvironmentPreparedEvent(ApplicationEnvironmentPreparedEvent event) {
+		//首先还是会去读spring.factories
 		List<EnvironmentPostProcessor> postProcessors = loadPostProcessors();
 		postProcessors.add(this);
 		AnnotationAwareOrderComparator.sort(postProcessors);
 		for (EnvironmentPostProcessor postProcessor : postProcessors) {
-			postProcessor.postProcessEnvironment(event.getEnvironment(),
-					event.getSpringApplication());
+			postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());
 		}
 	}
 
 	List<EnvironmentPostProcessor> loadPostProcessors() {
-		return SpringFactoriesLoader.loadFactories(EnvironmentPostProcessor.class,
-				getClass().getClassLoader());
+		/**
+		 * //一个@FunctionalInterface函数式接口
+		 * org.springframework.boot.env.EnvironmentPostProcessor=
+		 * //为springCloud提供的扩展类
+		 * org.springframework.boot.cloud.CloudFoundryVcapEnvironmentPostProcessor，
+		 * //支持json环境变量
+		 * org.springframework.boot.env.SpringApplicationJsonEnvironmentPostProcessor，
+		 * //springBoo2提供的一个包装类，主要将`StandardServletEnvironment`包装成`SystemEnvironmentPropertySourceEnvironmentPostProcessor`对象
+		 * org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor
+		 */
+		return SpringFactoriesLoader.loadFactories(EnvironmentPostProcessor.class, getClass().getClassLoader());
 	}
 
 	@Override

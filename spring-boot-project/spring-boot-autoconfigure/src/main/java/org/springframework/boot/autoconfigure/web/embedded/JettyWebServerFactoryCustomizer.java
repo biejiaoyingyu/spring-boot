@@ -16,18 +16,10 @@
 
 package org.springframework.boot.autoconfigure.web.embedded;
 
-import java.time.Duration;
-
-import org.eclipse.jetty.server.AbstractConnector;
-import org.eclipse.jetty.server.ConnectionFactory;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.NCSARequestLog;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerWrapper;
-
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.cloud.CloudPlatform;
 import org.springframework.boot.context.properties.PropertyMapper;
@@ -37,6 +29,8 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.Environment;
 import org.springframework.util.unit.DataSize;
+
+import java.time.Duration;
 
 /**
  * Customization for Jetty-specific features common for both Servlet and Reactive servers.
@@ -82,9 +76,7 @@ public class JettyWebServerFactoryCustomizer implements
 				.when(this::isPositive)
 				.to((maxHttpPostSize) -> customizeMaxHttpPostSize(factory,
 						maxHttpPostSize));
-		propertyMapper.from(properties::getConnectionTimeout).whenNonNull()
-				.to((connectionTimeout) -> customizeConnectionTimeout(factory,
-						connectionTimeout));
+		propertyMapper.from(properties::getConnectionTimeout).whenNonNull().to((connectionTimeout) -> customizeConnectionTimeout(factory,connectionTimeout));
 		propertyMapper.from(jettyProperties::getAccesslog)
 				.when(ServerProperties.Jetty.Accesslog::isEnabled)
 				.to((accesslog) -> customizeAccessLog(factory, accesslog));

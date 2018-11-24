@@ -16,17 +16,13 @@
 
 package org.springframework.boot.autoconfigure;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 import org.springframework.boot.context.annotation.Configurations;
 import org.springframework.core.Ordered;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.util.ClassUtils;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * {@link Configurations} representing auto-configuration {@code @Configuration} classes.
@@ -47,12 +43,9 @@ public class AutoConfigurations extends Configurations implements Ordered {
 
 	@Override
 	protected Collection<Class<?>> sort(Collection<Class<?>> classes) {
-		List<String> names = classes.stream().map(Class::getName)
-				.collect(Collectors.toList());
+		List<String> names = classes.stream().map(Class::getName).collect(Collectors.toList());
 		List<String> sorted = SORTER.getInPriorityOrder(names);
-		return sorted.stream()
-				.map((className) -> ClassUtils.resolveClassName(className, null))
-				.collect(Collectors.toCollection(ArrayList::new));
+		return sorted.stream().map((className) -> ClassUtils.resolveClassName(className, null)).collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	@Override
