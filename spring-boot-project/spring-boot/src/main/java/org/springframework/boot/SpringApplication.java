@@ -614,8 +614,15 @@ public class SpringApplication {
 			//	protected void customizePropertySources(MutablePropertySources propertySources) {
 			//	}
 
+			//==>注意下面的细节（查看原码）
 			//private final List<PropertySource<?>> propertySourceList = new CopyOnWriteArrayList<PropertySource<?>>();
 			//MutablePropertySources对象中定义了一个属性集合：
+			//将MutablePropertySources传递到文件解析器propertyResolver中，
+			// 同时AbstractEnvironment又实现了文件解析接口ConfigurablePropertyResolver,
+			// 所以AbstractEnvironment就有了文件解析的功能。所以StandardServletEnvironment
+			// 文件解析功能实际委托给了PropertySourcesPropertyResolver来实现。
+			//
+
 			return new StandardServletEnvironment();
 		case REACTIVE:
 			return new StandardReactiveWebEnvironment();
@@ -644,7 +651,15 @@ public class SpringApplication {
 		 */
 		configurePropertySources(environment, args);
 		/**
-		 * 配置Profiles
+		 * 配置active属性Profiles
+		 * 该方法主要将SpringBootApplication中指定的additionalProfiles文件加载到environment中，一般默认为空。
+		 * 该变量的用法，在项目启动类中，需要显示创建SpringApplication实例
+		 *
+		 * SpringApplication springApplication = new SpringApplication(MyApplication.class);
+		 * //设置profile变量
+		 * springApplication.setAdditionalProfiles("prd");
+		 * springApplication.run(MyApplication.class,args);
+
 		 */
 		configureProfiles(environment, args);
 	}
@@ -655,6 +670,8 @@ public class SpringApplication {
 	 * @param environment this application's environment
 	 * @param args arguments passed to the {@code run} method
 	 * @see #configureEnvironment(ConfigurableEnvironment, String[])
+	 *
+	 *
 	 */
 	protected void configurePropertySources(ConfigurableEnvironment environment, String[] args) {
 		MutablePropertySources sources = environment.getPropertySources();

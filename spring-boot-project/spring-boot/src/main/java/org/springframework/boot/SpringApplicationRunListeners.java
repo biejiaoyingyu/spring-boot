@@ -17,6 +17,7 @@
 package org.springframework.boot;
 
 import org.apache.commons.logging.Log;
+import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.util.ReflectionUtils;
@@ -60,9 +61,10 @@ class SpringApplicationRunListeners {
 	 * org.springframework.boot.context.config.ConfigFileApplicationListener,\******重点
 	 * org.springframework.boot.context.logging.ClasspathLoggingApplicationListener,\
 	 * org.springframework.boot.context.logging.LoggingApplicationListener,\
-	 *
+	 * 这些监听器都是（多波器）直接调用的，而不是由事件触发的
 	 * @param environment
 	 */
+
 	public void environmentPrepared(ConfigurableEnvironment environment) {
 		for (SpringApplicationRunListener listener : this.listeners) {
 			listener.environmentPrepared(environment);

@@ -80,9 +80,9 @@ import java.util.stream.Collectors;
  * @author Madhura Bhave
  *
  * ------------------------
- * //===================================
- * 配置文件相关的信息这个很重要，划横线。要考的、
- * //===================================
+ * //====================================================
+ * 配置文件相关的信息这个很重要，划横线。要考的,注意Loader内部类
+ * //====================================================
  */
 public class ConfigFileApplicationListener  implements EnvironmentPostProcessor, SmartApplicationListener, Ordered {
 
@@ -91,8 +91,11 @@ public class ConfigFileApplicationListener  implements EnvironmentPostProcessor,
 	/**
 	 * 默认配置文件的加载位置，如果相同，取最后一个
 	 */
-	// Note the order is from least to most specific (last one wins)
-	//这个配置非常重要，解释了配置文件的路径和覆盖顺序
+	//   Note the order is from least to most specific (last one wins)
+	//   这个配置非常重要，解释了配置文件的路径和覆盖顺序
+	//1）获取默认的配置文件路径，有4种。
+	//2）遍历所有的路径，拼装配置文件名称。
+	//3）再遍历解析器，选择yml或者properties解析，将解析结果添加到集合MutablePropertySources当中
 	private static final String DEFAULT_SEARCH_LOCATIONS = "classpath:/,classpath:/config/,file:./,file:./config/";
 
 	/**
@@ -288,21 +291,25 @@ public class ConfigFileApplicationListener  implements EnvironmentPostProcessor,
 
 	/**
 	 * Loads candidate property sources and configures the active profiles.
+	 *
+	 * 加载配置文件的内部类
 	 */
 	private class Loader {
 
 		private final Log logger = ConfigFileApplicationListener.this.logger;
 
+		//当前环境
 		private final ConfigurableEnvironment environment;
-
+		//???
 		private final PropertySourcesPlaceholdersResolver placeholdersResolver;
-
+		//类加载器，可以在项目启动时通过 SpringApplication 构造方法指定，默认采用 Launcher.AppClassLoader加载器
 		private final ResourceLoader resourceLoader;
-
+		//资源加载工具类1.PropertiesPropertySourceLoader--> "properties", "xml"
+		//            2.YamlPropertySourceLoader -->"yml", "yaml"
 		private final List<PropertySourceLoader> propertySourceLoaders;
-
+		//LIFO队列
 		private Deque<Profile> profiles;
-
+		//已处理过的文件
 		private List<Profile> processedProfiles;
 
 		private boolean activatedProfiles;
@@ -315,30 +322,36 @@ public class ConfigFileApplicationListener  implements EnvironmentPostProcessor,
 			this.environment = environment;
 			this.placeholdersResolver = new PropertySourcesPlaceholdersResolver(
 					this.environment);
+			//获取类加载器
 			this.resourceLoader = (resourceLoader != null) ? resourceLoader
 					: new DefaultResourceLoader();
+			//获取propertySourceLoaders
 			this.propertySourceLoaders = SpringFactoriesLoader.loadFactories(
 					PropertySourceLoader.class, getClass().getClassLoader());
 		}
 
+		/**
+		 * 进入load()方法
+		 */
 		public void load() {
 			this.profiles = new LinkedList<>();
 			this.processedProfiles = new LinkedList<>();
 			this.activatedProfiles = false;
 			this.loaded = new LinkedHashMap<>();
+			//初始化逻辑,进入
 			initializeProfiles();
+			//定位解析资源文件
 			while (!this.profiles.isEmpty()) {
 				Profile profile = this.profiles.poll();
 				if (profile != null && !profile.isDefaultProfile()) {
 					addProfileToEnvironment(profile.getName());
 				}
-				load(profile, this::getPositiveProfileFilter,
-						addToLoaded(MutablePropertySources::addLast, false));
+				load(profile, this::getPositiveProfileFilter, addToLoaded(MutablePropertySources::addLast, false));
 				this.processedProfiles.add(profile);
 			}
+			////对加载过的配置文件进行排序
 			resetEnvironmentProfiles(this.processedProfiles);
-			load(null, this::getNegativeProfileFilter,
-					addToLoaded(MutablePropertySources::addFirst, true));
+			load(null, this::getNegativeProfileFilter, addToLoaded(MutablePropertySources::addFirst, true));
 			addLoadedPropertySources();
 		}
 
@@ -346,16 +359,36 @@ public class ConfigFileApplicationListener  implements EnvironmentPostProcessor,
 		 * Initialize profile information from both the {@link Environment} active
 		 * profiles and any {@code spring.profiles.active}/{@code spring.profiles.include}
 		 * properties that are already set.
+		 *
+		 * 1）判断是否指定了profile，如果没有，添加默认环境：default。
+		 * 后面的解析流程会解析default文件，比如：application-default.yml、application-default.properties。
+		 * 2）添加一个null的profile，主要用来加载没有指定profile的配置文件，
+		 * 比如：application.properties因为 profiles 采用了 LIFO 队列，后进先出。
+		 * 所以会先加载profile为null的配置文件，也就是匹配application.properties、application.yml。
+		 *
+		 * 在SpringBoot1.x版本中，如果我们定义了application-default.properties文件，优先级顺序：
+		 * application-default.properties > application-dev.properties > application.properties
+		 *
+		 * 在SpringBoot2.x版本中，如果我们定义了application-default.properties文件，会有两种情况：
+		 * 1）没有配置application-dev.properties文件，优先级顺序：
+		 * application-default.properties > application.properties
+		 * 2）同时配置了application-dev.properties文件，优先级顺序：
+		 * application-dev.properties > application.properties
+		 * 这是因为在2.x版本中，如果定义了application-dev.properties文件，
+		 * application-default.properties文件将会删除。
+		 * 配置文件的优先级很麻烦
 		 */
 		private void initializeProfiles() {
 			// The default profile for these purposes is represented as null. We add it
 			// first so that it is processed first and has lowest priority.
+			//添加默认的profile
 			this.profiles.add(null);
 			Set<Profile> activatedViaProperty = getProfilesActivatedViaProperty();
 			this.profiles.addAll(getOtherActiveProfiles(activatedViaProperty));
 			// Any pre-existing active profiles set via property sources (e.g.
 			// System properties) take precedence over those added in config files.
 			addActiveProfiles(activatedViaProperty);
+
 			if (this.profiles.size() == 1) { // only has null profile
 				for (String defaultProfileName : this.environment.getDefaultProfiles()) {
 					Profile defaultProfile = new Profile(defaultProfileName, true);
@@ -372,6 +405,7 @@ public class ConfigFileApplicationListener  implements EnvironmentPostProcessor,
 			Binder binder = Binder.get(this.environment);
 			Set<Profile> activeProfiles = new LinkedHashSet<>();
 			activeProfiles.addAll(getProfiles(binder, INCLUDE_PROFILES_PROPERTY));
+
 			activeProfiles.addAll(getProfiles(binder, ACTIVE_PROFILES_PROPERTY));
 			return activeProfiles;
 		}
@@ -451,6 +485,7 @@ public class ConfigFileApplicationListener  implements EnvironmentPostProcessor,
 						(name) -> load(location, name, profile, filterFactory, consumer));
 			});
 		}
+
 
 		private void load(String location, String name, Profile profile,
 				DocumentFilterFactory filterFactory, DocumentConsumer consumer) {

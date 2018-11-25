@@ -112,6 +112,7 @@ public class  AutoConfigurationImportSelector
 		/**
 		 * 获取候选的配置
 		 */
+
 		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
 		configurations = removeDuplicates(configurations);
 		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
